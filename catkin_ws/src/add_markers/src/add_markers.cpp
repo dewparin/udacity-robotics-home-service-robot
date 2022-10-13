@@ -1,8 +1,6 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 
-int rateCounter = 0;
-bool isFinished = false;
 
 int main( int argc, char** argv ){
     ros::init(argc, argv, "basic_shapes");
@@ -12,6 +10,13 @@ int main( int argc, char** argv ){
 
     // Set our initial shape type to be a cube
     uint32_t shape = visualization_msgs::Marker::CUBE;
+
+    bool robot_at_pickup = false;
+    bool robot_at_dropoff = false;
+    double pickup_x = 0.0;
+    double pickup_y = 0.0;
+    double dropoff_x = 0.0;
+    double dropoff_y = 0.0;
 
     while(ros::ok()) { 
         visualization_msgs::Marker marker;
@@ -28,8 +33,6 @@ int main( int argc, char** argv ){
         marker.type = shape;
 
         // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
-        marker.pose.position.x = 0.55439;
-        marker.pose.position.y = 2.7831;
         marker.pose.position.z = 0;
         marker.pose.orientation.x = 0.0;
         marker.pose.orientation.y = 0.0;
@@ -56,34 +59,29 @@ int main( int argc, char** argv ){
             sleep(1);
         }
 
-        
-        if (!isFinished) {
-            while(rateCounter < 5) {
-                // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-                marker.action = visualization_msgs::Marker::ADD;
-                marker.lifetime = ros::Duration();
-                marker_pub.publish(marker);
-                r.sleep();
-                rateCounter++;
-                ROS_INFO("Counter %d", rateCounter);
-            }
-            
+        n.getParam("robot_at_pickup", robot_at_pickup);
+        n.getParam("robot_at_dropoff", robot_at_dropoff);
+        if (!robot_at_pickup) {
+            n.getParam("pickup_x", pickup_x);
+            n.getParam("pickup_y", pickup_y);
+            marker.pose.position.x = pickup_x;
+            marker.pose.position.y = pickup_y;
+            marker.action = visualization_msgs::Marker::ADD;
+            ROS_INFO("The marker is at the pickup zone");
+        } else if (!robot_at_dropoff) {
             marker.action = visualization_msgs::Marker::DELETE;
-            marker.lifetime = ros::Duration();
-            marker_pub.publish(marker);
-            ROS_INFO("Hide the marker for 5 second");
-            ros::Duration(5).sleep();
+            ROS_INFO("The marker is in transit");
+        } else {
+            n.getParam("dropoff_x", dropoff_x);
+            n.getParam("dropoff_y", dropoff_y);
+            marker.pose.position.x = dropoff_x;
+            marker.pose.position.y = dropoff_y;
+            marker.action = visualization_msgs::Marker::ADD;
+            ROS_INFO("The marker is at the drop-off zone");
         }
 
-        //set drop-off location
-        marker.pose.position.x = -1.83;
-        marker.pose.position.y = -5.42;
-        marker.pose.position.z = 0;
-        marker.action = visualization_msgs::Marker::ADD;
         marker.lifetime = ros::Duration();
         marker_pub.publish(marker);
-        isFinished = true;
         r.sleep();
-        ROS_INFO("The marker is at the drop-off zone");
     }
 }
