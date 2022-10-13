@@ -1,6 +1,6 @@
 #!/bin/sh
 
-xterm -e "roslaunch turtlebot_gazebo turtlebot_world.launch world_file:=\"/home/workspace/catkin_ws/src/map/box.world\"" &
+xterm -e "roslaunch turtlebot_gazebo turtlebot_world.launch world_file:=\"/home/workspace/catkin_ws/src/map/base.world\"" &
 sleep 15
 
 xterm -e "roslaunch turtlebot_gazebo gmapping_demo.launch" &
